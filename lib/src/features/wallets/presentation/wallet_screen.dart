@@ -9,6 +9,7 @@ class WalletScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final walletsAsync = ref.watch(walletListProvider);
     final activeWalletId = ref.watch(activeWalletIdProvider);
+    final allBalancesAsync = ref.watch(allWalletBalancesProvider); 
 
     return Scaffold(
       appBar: AppBar(title: const Text("Manage Wallets")),
@@ -16,9 +17,17 @@ class WalletScreen extends ConsumerWidget {
         data: (wallets) {
           return ListView.builder(
             itemCount: wallets.length,
+            // FIX 1: Add bottom padding to prevent overflow due to FloatingActionButton
+            padding: const EdgeInsets.only(bottom: 90), 
             itemBuilder: (context, index) {
               final wallet = wallets[index];
               final isActive = wallet.id == activeWalletId;
+              
+              final balance = allBalancesAsync.when(
+                data: (balances) => balances[wallet.id] ?? 0.0,
+                loading: () => 0.0, 
+                error: (_, __) => 0.0,
+              );
 
               return Card(
                 color: isActive ? Colors.blue.shade50 : Colors.white,
@@ -36,9 +45,31 @@ class WalletScreen extends ConsumerWidget {
                     ),
                   ),
                   subtitle: Text(wallet.type), // Personal / Business
-                  trailing: isActive
-                      ? const Chip(label: Text("Active", style: TextStyle(fontSize: 10, color: Colors.white)), backgroundColor: Colors.blue)
-                      : null,
+                  // MODIFIED: Show balance and active chip
+                  trailing: Column(
+                    // FIX 2: Ensure content is vertically centered in the ListTile
+                    mainAxisAlignment: MainAxisAlignment.center, 
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                       Text(
+                         "৳ ${balance.toStringAsFixed(0)}",
+                         style: TextStyle(
+                           fontWeight: FontWeight.bold,
+                           fontSize: 16,
+                           color: balance >= 0 ? Colors.green.shade700 : Colors.red.shade700,
+                         ),
+                       ),
+                       if(isActive)
+                        const Padding(
+                          padding: EdgeInsets.only(top: 4.0),
+                          // FIX 3: Removed "Active" chip to fix potential misalignment and simplify.
+                          // The blue checkmark and card color already indicate active status.
+                          // Using a smaller, more compact indicator if needed.
+                          // Using the word "Active" to avoid the overflow risk with the large font.
+                          child: Text("Active", style: TextStyle(fontSize: 12, color: Colors.blue)), 
+                        ),
+                    ],
+                  ),
                   onTap: () {
                     // Switch Wallet Logic
                     ref.read(activeWalletIdProvider.notifier).setWallet(wallet.id);

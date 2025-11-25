@@ -60,3 +60,53 @@ class WalletRepository {
     ));
   }
 }
+
+// 4. Provider to get Cash In Hand for all Wallets (New)
+final allWalletBalancesProvider = StreamProvider<Map<int, double>>((ref) {
+  final db = ref.watch(databaseProvider);
+
+  // 1. Get All Transactions with Party Info
+  final query = db.select(db.transactions).join([
+    leftOuterJoin(db.parties, db.parties.id.equalsExp(db.transactions.partyId)),
+  ]);
+  
+  // 2. Watch for changes
+  return query.watch().map((rows) {
+    // Map to hold {walletId: balance}
+    final Map<int, double> balances = {};
+    
+    for (var row in rows) {
+      final txn = row.readTable(db.transactions);
+      final party = row.readTableOrNull(db.parties);
+      
+      // FIX: Ensure walletId is non-null before using it as a map key.
+      if (txn.walletId == null) continue;
+      final int wId = txn.walletId!; 
+      
+      // Initialize balance for the wallet if it doesn't exist
+      balances.putIfAbsent(wId, () => 0.0);
+      
+      double change = 0;
+
+      if (txn.txnType == 'CASH_IN' || txn.txnType == 'TRANSFER_IN' || txn.txnType == 'DUE_RECEIVED') {
+        // Cash increases for these types
+        change = txn.amount;
+      } 
+      else if (txn.txnType == 'CASH_OUT' || txn.txnType == 'TRANSFER_OUT') {
+        // Cash decreases for these types
+        change = -txn.amount;
+      }
+      else if (txn.txnType == 'DUE_GIVEN') {
+        // Due Given is:
+        // - Goods given on credit (Customer) -> NO CASH CHANGE (change = 0)
+        // - Payment to Supplier (Supplier) -> CASH DECREASES (change = -amount)
+        if (party != null && party.type == 'SUPPLIER') {
+          change = -txn.amount;
+        }
+      }
+      
+      balances[wId] = balances[wId]! + change;
+    }
+    return balances;
+  });
+});
