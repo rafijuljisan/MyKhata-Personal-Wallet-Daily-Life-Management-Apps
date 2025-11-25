@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This handles the Native Start Screen (before Flutter loads) -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    
+    <!-- 1. Set Background Color to match your App's Blue -->
+    <!-- #1976D2 is roughly Colors.blue.shade700 -->
+    <item>
+        <shape>
+            <solid android:color="#1976D2" /> 
+        </shape>
+    </item>
+
+    <!-- 2. (Optional) You can add a centered logo if you have one -->
+    <!-- 
+    <item>
+        <bitmap
+            android:gravity="center"
+            android:src="@mipmap/ic_launcher" />
+    </item>
+    -->
+</layer-list>

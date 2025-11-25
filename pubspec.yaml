@@ -1,0 +1,64 @@
+name: my_khata
+description: "A new Flutter project."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.10.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  flutter_riverpod: ^3.0.3
+  riverpod_annotation: ^3.0.3
+  drift: ^2.29.0
+  sqlite3_flutter_libs: ^0.5.40
+  path_provider: ^2.1.5
+  path: ^1.9.1
+  go_router: ^17.0.0
+  intl: ^0.20.2
+  google_fonts: ^6.3.2
+  pdf: ^3.11.3
+  printing: ^5.14.2
+  rxdart: ^0.28.0
+  share_plus: ^12.0.1
+  file_picker: ^10.3.7
+  shared_preferences: ^2.5.3
+  url_launcher: ^6.3.2
+  google_sign_in: ^6.2.1
+  googleapis: ^11.0.0
+  extension_google_sign_in_as_googleapis_auth: ^2.0.12
+  http: ^1.1.0
+  fl_chart: ^1.1.1
+  local_auth: ^2.3.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  build_runner: ^2.10.4
+  drift_dev: ^2.29.0
+  riverpod_generator: ^3.0.3
+  custom_lint: ^0.8.1
+  riverpod_lint: ^3.0.3
+  # Added for Icon Generation
+  flutter_launcher_icons: ^0.13.1
+
+# --- CONFIGURATION FOR ICONS ---
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/icon.png"
+  min_sdk_android: 21
+  # If you want a background color for Android adaptive icons (e.g. your orange):
+  # adaptive_icon_background: "#FF5722"
+  # adaptive_icon_foreground: "assets/icon.png" 
+
+flutter:
+  uses-material-design: true
+
+  # I enabled this so you can use the image inside your app too
+  assets:
+    - assets/
