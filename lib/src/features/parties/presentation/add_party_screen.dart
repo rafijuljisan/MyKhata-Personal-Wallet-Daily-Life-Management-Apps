@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../data/database.dart'; // Needed for Party type
+import 'package:flutter_contacts/flutter_contacts.dart'; // Import this package
+import '../../../data/database.dart'; 
 import '../data/party_repository.dart';
 
 class AddPartyScreen extends ConsumerStatefulWidget {
@@ -28,6 +29,31 @@ class _AddPartyScreenState extends ConsumerState<AddPartyScreen> {
     }
   }
 
+  // --- NEW: Function to pick contact ---
+  Future<void> _pickContact() async {
+    // 1. Request Permission
+    if (await FlutterContacts.requestPermission()) {
+      // 2. Open Native Contact Picker
+      final contact = await FlutterContacts.openExternalPick();
+      
+      if (contact != null) {
+        setState(() {
+          _nameController.text = contact.displayName;
+          if (contact.phones.isNotEmpty) {
+            // Simple cleanup to keep digits and + only (removes spaces, dashes)
+            _mobileController.text = contact.phones.first.number.replaceAll(RegExp(r'[^\d+]'), '');
+          }
+        });
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Permission to access contacts was denied.'))
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.partyToEdit != null;
@@ -40,7 +66,16 @@ class _AddPartyScreenState extends ConsumerState<AddPartyScreen> {
           children: [
             TextField(
               controller: _nameController,
-              decoration: const InputDecoration(labelText: "Name", border: OutlineInputBorder()),
+              decoration: InputDecoration(
+                labelText: "Name", 
+                border: const OutlineInputBorder(),
+                // NEW: Contact Icon Button
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.contacts, color: Colors.blue),
+                  onPressed: _pickContact,
+                  tooltip: "Pick from Phonebook",
+                ),
+              ),
             ),
             const SizedBox(height: 16),
             TextField(

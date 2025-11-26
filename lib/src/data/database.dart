@@ -9,12 +9,12 @@ import 'tables.dart';
 
 part 'database.g.dart';
 
-@DriftDatabase(tables: [Wallets, Parties, Transactions, BikeLogs, ShoppingItems]) // Added ShoppingItems
+@DriftDatabase(tables: [Wallets, Parties, Transactions, BikeLogs, ShoppingItems, Categories, Budgets, RecurringTransactions, SavingGoals]) 
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 6; // Bumped to 6
+  int get schemaVersion => 8; // Bumped to 8
 
   @override
   MigrationStrategy get migration {
@@ -28,25 +28,21 @@ class AppDatabase extends _$AppDatabase {
         ));
       },
       onUpgrade: (Migrator m, int from, int to) async {
-        if (from < 3) {
-          await m.createTable(wallets);
-          await m.addColumn(transactions, transactions.walletId);
-          await into(wallets).insert(WalletsCompanion.insert(
-            name: 'My Wallet',
-            type: const Value('Personal'),
-            isDefault: const Value(true),
-          ));
+        // ... Previous migrations ...
+        if (from < 7) {
+          await m.createTable(categories);
+          await m.createTable(budgets);
+          await m.createTable(recurringTransactions);
+          await m.createTable(savingGoals);
+          try {
+            await m.addColumn(transactions, transactions.categoryId);
+          } catch (e) {
+             // ignore if exists
+          }
         }
-        if (from < 4) {
-           await m.createTable(bikeLogs); 
-        }
-        if (from < 5) {
-           await m.addColumn(bikeLogs, bikeLogs.nextDueKm);
-           await m.addColumn(bikeLogs, bikeLogs.nextDueDate);
-        }
-        if (from < 6) {
-           // Version 6: Bazar List Migration
-           await m.createTable(shoppingItems);
+        if (from < 8) {
+          // Version 8: Add Frequency to RecurringTransactions
+          await m.addColumn(recurringTransactions, recurringTransactions.frequency);
         }
       },
     );

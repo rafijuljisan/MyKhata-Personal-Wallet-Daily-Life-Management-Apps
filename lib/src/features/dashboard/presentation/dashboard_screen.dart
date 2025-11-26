@@ -14,10 +14,15 @@ import '../../settings/data/language_provider.dart';
 import '../../settings/data/backup_service.dart';
 import '../../wallets/presentation/wallet_screen.dart';
 import '../../wallets/data/wallet_provider.dart';
-import '../../wallets/presentation/transfer_money_screen.dart'; // NEW Import
+import '../../wallets/presentation/transfer_money_screen.dart';
 import '../../analytics/presentation/analytics_screen.dart';
 import '../../bike/presentation/bike_screen.dart';
 import '../../shopping/presentation/shopping_list_screen.dart';
+
+// --- NEW IMPORTS ---
+import '../../budget/presentation/budget_screen.dart';
+import '../../recurring/presentation/recurring_bill_screen.dart';
+import '../../savings/presentation/saving_goal_screen.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -112,11 +117,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   child: GridView.count(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    crossAxisCount: 5, // Changed from 4 to 5
-                    mainAxisSpacing: 12, // Reduced spacing
-                    crossAxisSpacing: 8, // Reduced spacing
-                    childAspectRatio: 0.85, // Adjusted ratio for better fit
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10), // Reduced horizontal padding
+                    crossAxisCount: 4, // Cleaned up layout to 4 columns
+                    mainAxisSpacing: 16, 
+                    crossAxisSpacing: 8, 
+                    childAspectRatio: 0.9, 
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10), 
                     children: [
                       // 1. Contacts
                       _MenuIcon(Icons.people, AppStrings.get('contacts', lang), Colors.indigo, 
@@ -134,25 +139,39 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       _MenuIcon(Icons.picture_as_pdf, AppStrings.get('reports', lang), Colors.orange.shade800, 
                         () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ReportScreen()))),
                       
-                      // 5. Wallets
-                      _MenuIcon(Icons.account_balance_wallet, "Wallets", Colors.teal, 
-                        () => Navigator.push(context, MaterialPageRoute(builder: (_) => const WalletScreen()))),
+                      // --- NEW FEATURES ---
                       
-                      // 6. TRANSFER
-                      _MenuIcon(Icons.swap_horiz, AppStrings.get('transfer', lang), Colors.green.shade700, 
-                        () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TransferMoneyScreen()))),
+                      // 5. Budgeting
+                      _MenuIcon(Icons.calculate, "Budget", Colors.teal, 
+                        () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BudgetScreen()))),
+                      
+                      // 6. Bills (Recurring)
+                      _MenuIcon(Icons.calendar_month, "Bills", Colors.redAccent, 
+                        () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RecurringBillScreen()))),
 
-                      // 7. Settings
-                      _MenuIcon(Icons.settings, AppStrings.get('settings', lang), Colors.blueGrey, 
-                        () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()))),
+                      // 7. Savings
+                      _MenuIcon(Icons.savings, "Savings", Colors.green, 
+                        () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SavingGoalScreen()))),
                       
                       // 8. Bike Tracker
                       _MenuIcon(Icons.directions_bike, "Bike", Colors.brown, 
                         () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BikeScreen()))),
                       
                       // 9. Bazar List
-                      _MenuIcon(Icons.shopping_cart, "Bazar List", Colors.deepOrange, 
+                      _MenuIcon(Icons.shopping_cart, "Bazar", Colors.deepOrange, 
                         () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ShoppingListScreen()))),
+
+                      // 10. Transfer
+                      _MenuIcon(Icons.swap_horiz, AppStrings.get('transfer', lang), Colors.blueGrey, 
+                        () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TransferMoneyScreen()))),
+
+                      // 11. Wallets
+                      _MenuIcon(Icons.account_balance_wallet, "Wallets", Colors.cyan, 
+                        () => Navigator.push(context, MaterialPageRoute(builder: (_) => const WalletScreen()))),
+
+                      // 12. Settings
+                      _MenuIcon(Icons.settings, AppStrings.get('settings', lang), Colors.grey.shade700, 
+                        () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()))),
                     ],
                   ),
                 ),
@@ -169,58 +188,28 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   ),
                   child: Row(
                     children: [
-                      Expanded(child: _BigNumber(AppStrings.get('receive', lang), totalDue, Colors.red)), 
+                      Expanded(child: _BigNumber(AppStrings.get('receive', lang), totalDue, Colors.green)), // Pabo is Green
                       Container(width: 1, height: 40, color: Colors.grey.shade300), 
-                      Expanded(child: _BigNumber(AppStrings.get('pay', lang), totalPayable, Colors.green)), 
+                      Expanded(child: _BigNumber(AppStrings.get('pay', lang), totalPayable, Colors.red)), // Dibo is Red
                     ],
                   ),
                 ),
 
-                // --- SEARCH BAR ---
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PartyListScreen())),
-                          child: Container(
-                            height: 45,
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade100,
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(Icons.search, color: Colors.grey),
-                                const SizedBox(width: 10),
-                                Text(AppStrings.get('search_contacts', lang), style: TextStyle(color: Colors.grey.shade600)),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      _SquareIconBtn(Icons.filter_list, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TransactionHistoryScreen()))),
-                      const SizedBox(width: 10),
-                      _SquareIconBtn(Icons.download, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ReportScreen()))),
-                    ],
-                  ),
-                ),
-                
-                const SizedBox(height: 20),
-                
                 // --- LIST HEADER ---
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
                   child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(AppStrings.get('customers_suppliers', lang), style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+                      TextButton(
+                        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PartyListScreen())),
+                         child: const Text("View All")
+                      ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 5),
               ],
             ),
           ),
@@ -228,7 +217,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           // --- CUSTOMER LIST ---
           partyListAsync.when(
             data: (parties) {
-              if (parties.isEmpty) {
+              // Show only top 5 recent or non-zero balance for dashboard
+              final dashboardList = parties.take(10).toList();
+              
+              if (dashboardList.isEmpty) {
                 return SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.all(40),
@@ -239,9 +231,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               return SliverList(
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
-                    final item = parties[index];
+                    final item = dashboardList[index];
                     final balance = item.balance;
-                    final isPositive = balance >= 0; 
+                    // Dashboard colors: Green if I get money (Pabo), Red if I pay (Dibo)
+                    final isPabo = balance > 0;
                     
                     return ListTile(
                       leading: CircleAvatar(
@@ -256,7 +249,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           Text(
                             "৳ ${balance.abs().toStringAsFixed(0)}",
                             style: TextStyle(
-                              color: isPositive ? Colors.red : Colors.green, 
+                              color: isPabo ? Colors.green : Colors.red, 
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
                             ),
@@ -270,7 +263,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       },
                     );
                   },
-                  childCount: parties.length,
+                  childCount: dashboardList.length,
                 ),
               );
             },
@@ -289,14 +282,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         showUnselectedLabels: true,
         type: BottomNavigationBarType.fixed,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.menu_book), label: "Tally"),
-          BottomNavigationBarItem(icon: Icon(Icons.inbox), label: "Cashbox"),
-          BottomNavigationBarItem(icon: Icon(Icons.account_balance_wallet), label: "Wallet"),
-          BottomNavigationBarItem(icon: Icon(Icons.menu), label: "Menu"),
+          BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: "Dash"),
+          BottomNavigationBarItem(icon: Icon(Icons.history), label: "History"),
+          BottomNavigationBarItem(icon: Icon(Icons.people), label: "Contacts"),
+          BottomNavigationBarItem(icon: Icon(Icons.settings), label: "Menu"),
         ],
         onTap: (index) {
           if(index == 1) Navigator.push(context, MaterialPageRoute(builder: (_) => const TransactionHistoryScreen()));
-          if(index == 2) Navigator.push(context, MaterialPageRoute(builder: (_) => const WalletScreen()));
+          if(index == 2) Navigator.push(context, MaterialPageRoute(builder: (_) => const PartyListScreen()));
           if(index == 3) Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()));
         },
       ),
@@ -305,7 +298,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         onPressed: () {
           Navigator.push(context, MaterialPageRoute(builder: (_) => const AddTransactionScreen()));
         },
-        backgroundColor: Colors.red, 
+        backgroundColor: Colors.blue[800], 
         child: const Icon(Icons.add, color: Colors.white, size: 30),
       ),
     );
@@ -330,11 +323,13 @@ class _MenuIcon extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.shade300),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(color: Colors.blue.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2))
+              ],
             ),
             child: Icon(icon, color: color, size: 28),
           ),
@@ -374,28 +369,6 @@ class _BigNumber extends StatelessWidget {
         const SizedBox(height: 4),
         Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12)),
       ],
-    );
-  }
-}
-
-class _SquareIconBtn extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onTap;
-
-  const _SquareIconBtn(this.icon, this.onTap);
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey.shade300),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Icon(icon, color: Colors.black54, size: 24),
-      ),
     );
   }
 }

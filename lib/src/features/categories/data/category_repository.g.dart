@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'transaction_repository.dart';
+part of 'category_repository.dart';
 
 // **************************************************************************
 // RiverpodGenerator
@@ -9,28 +9,28 @@ part of 'transaction_repository.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
-@ProviderFor(TransactionRepository)
-const transactionRepositoryProvider = TransactionRepositoryProvider._();
+@ProviderFor(CategoryRepository)
+const categoryRepositoryProvider = CategoryRepositoryProvider._();
 
-final class TransactionRepositoryProvider
-    extends $NotifierProvider<TransactionRepository, void> {
-  const TransactionRepositoryProvider._()
+final class CategoryRepositoryProvider
+    extends $NotifierProvider<CategoryRepository, void> {
+  const CategoryRepositoryProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'transactionRepositoryProvider',
+        name: r'categoryRepositoryProvider',
         isAutoDispose: true,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$transactionRepositoryHash();
+  String debugGetCreateSourceHash() => _$categoryRepositoryHash();
 
   @$internal
   @override
-  TransactionRepository create() => TransactionRepository();
+  CategoryRepository create() => CategoryRepository();
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(void value) {
@@ -41,10 +41,10 @@ final class TransactionRepositoryProvider
   }
 }
 
-String _$transactionRepositoryHash() =>
-    r'402aed85d78b49db180aeb01dd04809bc6f6ba62';
+String _$categoryRepositoryHash() =>
+    r'4dc23b69ac0b17be36816cca891848c946a42d5c';
 
-abstract class _$TransactionRepository extends $Notifier<void> {
+abstract class _$CategoryRepository extends $Notifier<void> {
   void build();
   @$mustCallSuper
   @override

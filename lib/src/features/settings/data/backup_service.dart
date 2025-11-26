@@ -16,14 +16,23 @@ class BackupService {
 
   BackupService(this.db, this.driveService);
 
-  // --- Helper: Generate JSON String ---
+  // --- Helper: Generate JSON String (UPDATED with ALL Features) ---
   Future<String> _generateJsonString() async {
+    // Fetch ALL data
     final allParties = await db.select(db.parties).get();
     final allTxns = await db.select(db.transactions).get();
+    
+    // New Features
+    final allCategories = await db.select(db.categories).get();
+    final allBudgets = await db.select(db.budgets).get();
+    final allRecurring = await db.select(db.recurringTransactions).get();
+    final allSavings = await db.select(db.savingGoals).get();
 
     final data = {
-      "version": 1,
+      "version": 2, // Bumped version to indicate new schema
       "date": DateTime.now().toIso8601String(),
+      
+      // 1. Parties
       "parties": allParties.map((p) => {
         "id": p.id,
         "name": p.name,
@@ -31,12 +40,56 @@ class BackupService {
         "type": p.type,
         "initialBalance": p.initialBalance,
       }).toList(),
+      
+      // 2. Transactions
       "transactions": allTxns.map((t) => {
         "amount": t.amount,
         "txnType": t.txnType,
         "date": t.date.toIso8601String(),
         "details": t.details,
         "partyId": t.partyId,
+        "categoryId": t.categoryId, // Added categoryId
+        "walletId": t.walletId,     // Added walletId
+      }).toList(),
+
+      // 3. Categories
+      "categories": allCategories.map((c) => {
+        "id": c.id,
+        "name": c.name,
+        "type": c.type,
+        "isSystem": c.isSystem,
+      }).toList(),
+
+      // 4. Budgets
+      "budgets": allBudgets.map((b) => {
+        "id": b.id,
+        "categoryId": b.categoryId,
+        "limitAmount": b.limitAmount,
+        "month": b.month,
+        "year": b.year,
+      }).toList(),
+
+      // 5. Recurring Bills
+      "recurring": allRecurring.map((r) => {
+        "id": r.id,
+        "name": r.name,
+        "amount": r.amount,
+        "type": r.type,
+        "categoryId": r.categoryId,
+        "frequency": r.frequency,
+        "dayOfMonth": r.dayOfMonth,
+        "nextDueDate": r.nextDueDate.toIso8601String(),
+        "lastPaidDate": r.lastPaidDate?.toIso8601String(),
+      }).toList(),
+
+      // 6. Saving Goals
+      "savings": allSavings.map((s) => {
+        "id": s.id,
+        "name": s.name,
+        "targetAmount": s.targetAmount,
+        "currentAmount": s.currentAmount,
+        "targetDate": s.targetDate?.toIso8601String(),
+        "createdAt": s.createdAt.toIso8601String(),
       }).toList(),
     };
 
@@ -53,43 +106,41 @@ class BackupService {
     await Share.shareXFiles([XFile(file.path)], text: 'MyKhata Backup File');
   }
 
-  // --- 2. AUTO BACKUP TO PHONE (With Auto-Delete) ---
-  // retentionDays: Files older than this will be deleted (Default: 30 Days)
+  // --- 2. AUTO BACKUP TO PHONE (FIXED: ONCE A DAY ONLY) ---
   Future<void> autoBackupToPhone({int retentionDays = 30}) async {
     try {
-      final jsonString = await _generateJsonString();
       final dateStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
-      
       Directory? backupDir;
 
-      // STRATEGY 1: Try visible "Downloads" folder (Preferred for visibility)
+      // STRATEGY 1: Visible Download Folder
       final downloadDir = Directory('/storage/emulated/0/Download/MyKhata_Backups');
-      
       if (!await downloadDir.exists()) {
-        try {
-          await downloadDir.create(recursive: true);
-        } catch (e) {
-          print("Could not create Download dir: $e");
-        }
+        try { await downloadDir.create(recursive: true); } catch (e) { /* ignore */ }
       }
 
       if (await downloadDir.exists()) {
         backupDir = downloadDir;
       } else {
-        // STRATEGY 2: Fallback to App-Specific Storage (Hidden but reliable)
+        // STRATEGY 2: App Internal Storage
         final appDir = await getExternalStorageDirectory();
         backupDir = Directory('${appDir!.path}/Backups');
-        if (!await backupDir.exists()) {
-          await backupDir.create(recursive: true);
-        }
+        if (!await backupDir.exists()) await backupDir.create(recursive: true);
       }
 
-      // Save the New Backup
       final file = File('${backupDir.path}/AutoBackup_$dateStr.json');
+
+      // --- FIX: Check if today's backup ALREADY EXISTS ---
+      if (await file.exists()) {
+        print("Backup for today ($dateStr) already exists. Skipping.");
+        return; 
+      }
+
+      // If not exists, generate and save
+      final jsonString = await _generateJsonString();
       await file.writeAsString(jsonString);
       print("Auto Backup Success: ${file.path}");
 
-      // --- CLEANUP: Delete Old Files ---
+      // Cleanup old files
       await _deleteOldBackups(backupDir, retentionDays);
 
     } catch (e) {
@@ -97,7 +148,7 @@ class BackupService {
     }
   }
 
-  // Helper to delete files older than X days
+  // Helper to cleanup
   Future<void> _deleteOldBackups(Directory dir, int daysToKeep) async {
     try {
       final List<FileSystemEntity> files = dir.listSync();
@@ -106,32 +157,23 @@ class BackupService {
       for (var entity in files) {
         if (entity is File) {
           final filename = entity.uri.pathSegments.last;
-          // Check format: AutoBackup_yyyy-MM-dd.json
           if (filename.startsWith('AutoBackup_') && filename.endsWith('.json')) {
             try {
-              // Extract date part: "AutoBackup_2023-10-25.json" -> "2023-10-25"
               String datePart = filename.replaceFirst('AutoBackup_', '').replaceFirst('.json', '');
               DateTime fileDate = DateFormat('yyyy-MM-dd').parse(datePart);
-
-              // Calculate difference
               int difference = now.difference(fileDate).inDays;
 
               if (difference > daysToKeep) {
-                print("Deleting old backup: $filename ($difference days old)");
                 await entity.delete();
               }
-            } catch (e) {
-              // Ignore files that don't match date format perfectly
-            }
+            } catch (e) { /* ignore */ }
           }
         }
       }
-    } catch (e) {
-      print("Cleanup Error: $e");
-    }
+    } catch (e) { /* ignore */ }
   }
 
-  // --- 3. RESTORE ---
+  // --- 3. RESTORE (UPDATED with New Tables) ---
   Future<bool> restoreBackup() async {
     try {
       final result = await FilePicker.platform.pickFiles(
@@ -145,30 +187,101 @@ class BackupService {
       final jsonString = await file.readAsString();
       final Map<String, dynamic> data = jsonDecode(jsonString);
 
-      await db.transaction(() async {
-        await db.delete(db.transactions).go();
-        await db.delete(db.parties).go();
+      // Use batch for better performance and atomicity
+      await db.batch((batch) {
+        // 1. Clear old data (Using delete all rows logic)
+        batch.deleteWhere(db.transactions, (t) => const Constant(true));
+        batch.deleteWhere(db.recurringTransactions, (t) => const Constant(true));
+        batch.deleteWhere(db.budgets, (t) => const Constant(true));
+        batch.deleteWhere(db.savingGoals, (t) => const Constant(true));
+        batch.deleteWhere(db.parties, (t) => const Constant(true));
+        batch.deleteWhere(db.categories, (t) => const Constant(true));
 
-        for (var p in data['parties']) {
-          await db.into(db.parties).insert(PartiesCompanion.insert(
-            id: Value(p['id']),
-            name: p['name'],
-            mobile: p['mobile'],
-            type: p['type'],
-            initialBalance: Value(p['initialBalance']),
-          ));
+        // 2. Restore Categories (Dependencies first)
+        if (data.containsKey('categories')) {
+          for (var c in data['categories']) {
+            batch.insert(db.categories, CategoriesCompanion.insert(
+              id: Value(c['id']),
+              name: c['name'],
+              type: c['type'],
+              isSystem: Value(c['isSystem'] ?? false),
+            ), mode: InsertMode.insertOrReplace);
+          }
         }
 
-        for (var t in data['transactions']) {
-          await db.into(db.transactions).insert(TransactionsCompanion.insert(
-            amount: t['amount'],
-            txnType: t['txnType'],
-            date: DateTime.parse(t['date']),
-            details: Value(t['details']),
-            partyId: Value(t['partyId']),
-          ));
+        // 3. Restore Parties
+        if (data.containsKey('parties')) {
+          for (var p in data['parties']) {
+            batch.insert(db.parties, PartiesCompanion.insert(
+              id: Value(p['id']),
+              name: p['name'],
+              mobile: p['mobile'],
+              type: p['type'],
+              initialBalance: Value(p['initialBalance']),
+            ), mode: InsertMode.insertOrReplace);
+          }
+        }
+
+        // 4. Restore Transactions
+        if (data.containsKey('transactions')) {
+          for (var t in data['transactions']) {
+            batch.insert(db.transactions, TransactionsCompanion.insert(
+              amount: t['amount'],
+              txnType: t['txnType'],
+              date: DateTime.parse(t['date']),
+              details: Value(t['details']),
+              partyId: Value(t['partyId']),
+              categoryId: Value(t['categoryId']), // Restore Category Link
+              walletId: Value(t['walletId']),     // Restore Wallet Link
+            ));
+          }
+        }
+
+        // 5. Restore Budgets
+        if (data.containsKey('budgets')) {
+          for (var b in data['budgets']) {
+            batch.insert(db.budgets, BudgetsCompanion.insert(
+              id: Value(b['id']),
+              categoryId: b['categoryId'],
+              limitAmount: b['limitAmount'],
+              month: b['month'],
+              year: b['year'],
+            ));
+          }
+        }
+
+        // 6. Restore Recurring
+        if (data.containsKey('recurring')) {
+          for (var r in data['recurring']) {
+            batch.insert(db.recurringTransactions, RecurringTransactionsCompanion.insert(
+              id: Value(r['id']),
+              name: r['name'],
+              amount: r['amount'],
+              type: r['type'],
+              categoryId: r['categoryId'],
+              frequency: Value(r['frequency'] ?? 'MONTHLY'),
+              dayOfMonth: r['dayOfMonth'],
+              nextDueDate: DateTime.parse(r['nextDueDate']),
+              lastPaidDate: r['lastPaidDate'] != null ? Value(DateTime.parse(r['lastPaidDate'])) : const Value(null),
+            ));
+          }
+        }
+
+        // 7. Restore Savings
+        if (data.containsKey('savings')) {
+          for (var s in data['savings']) {
+            batch.insert(db.savingGoals, SavingGoalsCompanion.insert(
+              id: Value(s['id']),
+              name: s['name'],
+              targetAmount: s['targetAmount'],
+              currentAmount: Value(s['currentAmount']),
+              targetDate: s['targetDate'] != null ? Value(DateTime.parse(s['targetDate'])) : const Value(null),
+              createdAt: Value(DateTime.parse(s['createdAt'])),
+            ));
+          }
         }
       });
+
       return true;
     } catch (e) {
       print("Restore Error: $e");

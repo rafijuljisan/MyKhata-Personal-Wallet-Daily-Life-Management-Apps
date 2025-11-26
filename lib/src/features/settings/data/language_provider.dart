@@ -60,6 +60,10 @@ class AppStrings {
     'date': 'Date',
     'add_transaction': 'Add Transaction',
     'edit_transaction': 'Edit Transaction',
+    'category': 'Category',
+    'split': 'Split',
+    'split_breakdown': 'Split Breakdown',
+    'total_amount': 'Total Amount',
     
     // Parties (Contacts)
     'customers_suppliers': 'Customers & Suppliers',
@@ -78,6 +82,8 @@ class AppStrings {
     'got_money': 'GOT MONEY\n(PELAM)',
     'add_due': 'Add Due (Baki)',
     'receive_due': 'Receive Cash (Joma)',
+    'gave': 'Gave',
+    'got': 'Got',
     
     // Delete Dialogs
     'delete_confirm_title': 'Delete?',
@@ -135,6 +141,42 @@ class AppStrings {
     'bike_name': 'Bike Name',
     'bike_number': 'Bike Number',
     'bike_list': 'Bike List',
+
+    // --- NEW: Budgeting ---
+    'budget_title': 'Monthly Budget',
+    'set_budget': 'Set Budget',
+    'limit_amount': 'Limit Amount (৳)',
+    'spent': 'Spent',
+    'limit': 'Limit',
+    'near_limit': '⚠️ Near Budget Limit!',
+    'over_budget': '🚨 Over Budget!',
+    'no_categories': 'No expense categories found.',
+
+    // --- NEW: Recurring Bills ---
+    'recurring_title': 'Recurring Bills & Subscriptions',
+    'no_recurring': 'No recurring bills set up.\nAdd your Rent, Internet, or Tuition fees.',
+    'add_bill': 'Add Bill',
+    'bill_name': 'Bill Name (e.g. Rent)',
+    'day_of_month': 'Day of Month (1-28)',
+    'due_today': 'Due Today!',
+    'pay_now': 'PAY NOW',
+    'marked_paid': 'Marked as Paid!',
+    
+    // --- NEW: Savings ---
+    'savings_title': 'Savings Goals',
+    'no_goals': 'No goals yet.\nStart saving for a Dream!',
+    'new_goal': 'New Goal',
+    'set_goal': 'Set New Goal',
+    'goal_name': 'Goal Name (e.g. Laptop)',
+    'target_amount': 'Target Amount',
+    'target_date': 'Target Date (Optional)',
+    'create_goal': 'Create Goal',
+    'goal_reached': 'Goal Reached! 🎉',
+    'add_savings': 'Add Savings',
+    'deposit': 'Deposit',
+    'deduct_wallet': 'Deduct from Wallet Balance?',
+    'saved': 'Saved',
+    'target': 'Target',
   };
 
   static final Map<String, String> _bn = {
@@ -172,6 +214,10 @@ class AppStrings {
     'date': 'তারিখ',
     'add_transaction': 'লেনদেন যোগ করুন',
     'edit_transaction': 'লেনদেন পরিবর্তন করুন',
+    'category': 'ক্যাটাগরি',
+    'split': 'ভাগ (Split)',
+    'split_breakdown': 'খরচের ভাগ',
+    'total_amount': 'মোট টাকা',
 
     // Parties (Contacts)
     'customers_suppliers': 'কাস্টমার ও মহাজন',
@@ -190,6 +236,8 @@ class AppStrings {
     'got_money': 'টাকা পেলাম\n(জমা)',
     'add_due': 'বাকি দিলাম',
     'receive_due': 'বাকি পেলাম',
+    'gave': 'দিলাম',
+    'got': 'পেলাম',
 
     // Delete Dialogs
     'delete_confirm_title': 'ডিলিট করবেন?',
@@ -247,5 +295,41 @@ class AppStrings {
     'bike_name': 'বাইকের নাম',
     'bike_number': 'বাইক নম্বর',
     'bike_list': 'বাইক তালিকা',
+
+    // --- NEW: Budgeting ---
+    'budget_title': 'মাসিক বাজেট',
+    'set_budget': 'বাজেট সেট করুন',
+    'limit_amount': 'সর্বোচ্চ সীমা (৳)',
+    'spent': 'খরচ হয়েছে',
+    'limit': 'সীমা',
+    'near_limit': '⚠️ বাজেটের কাছাকাছি!',
+    'over_budget': '🚨 বাজেট অতিক্রম করেছে!',
+    'no_categories': 'কোনো খরচের ক্যাটাগরি পাওয়া যায়নি',
+
+    // --- NEW: Recurring Bills ---
+    'recurring_title': 'নিয়মিত বিল ও সাবস্ক্রিপশন',
+    'no_recurring': 'কোনো নিয়মিত বিল নেই।\nভাড়া, ইন্টারনেট বা টিউশন ফি যোগ করুন।',
+    'add_bill': 'বিল যোগ করুন',
+    'bill_name': 'বিলের নাম (যেমন: ভাড়া)',
+    'day_of_month': 'মাসের তারিখ (১-২৮)',
+    'due_today': 'আজ দিতে হবে!',
+    'pay_now': 'পরিশোধ করুন',
+    'marked_paid': 'পরিশোধিত হিসেবে মার্ক করা হয়েছে!',
+
+    // --- NEW: Savings ---
+    'savings_title': 'সঞ্চয়ের লক্ষ্য',
+    'no_goals': 'কোনো লক্ষ্য নেই।\nস্বপ্নের জন্য সঞ্চয় শুরু করুন!',
+    'new_goal': 'নতুন লক্ষ্য',
+    'set_goal': 'লক্ষ্য ঠিক করুন',
+    'goal_name': 'লক্ষ্যের নাম (যেমন: ল্যাপটপ)',
+    'target_amount': 'লক্ষ্য পরিমাণ',
+    'target_date': 'লক্ষ্য তারিখ (ঐচ্ছিক)',
+    'create_goal': 'লক্ষ্য তৈরি করুন',
+    'goal_reached': 'লক্ষ্য অর্জিত হয়েছে! 🎉',
+    'add_savings': 'সঞ্চয় জমা করুন',
+    'deposit': 'জমা দিন',
+    'deduct_wallet': 'ওয়ালেট থেকে কাটবেন?',
+    'saved': 'জমা হয়েছে',
+    'target': 'লক্ষ্য',
   };
 }

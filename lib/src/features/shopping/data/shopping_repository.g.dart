@@ -42,7 +42,7 @@ final class ShoppingRepositoryProvider
 }
 
 String _$shoppingRepositoryHash() =>
-    r'1e550a389aaaad8cf56744ea265691d81675b31d';
+    r'2ad2bca7583c7f2669e54c3d41ada6f6f43923b5';
 
 abstract class _$ShoppingRepository extends $Notifier<void> {
   void build();

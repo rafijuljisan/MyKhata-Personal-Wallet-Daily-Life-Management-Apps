@@ -24,8 +24,10 @@ class Transactions extends Table {
   RealColumn get amount => real()();
   TextColumn get txnType => text()(); 
   TextColumn get category => text().nullable()(); 
+  IntColumn get categoryId => integer().nullable().references(Categories, #id)(); 
   IntColumn get walletId => integer().nullable().references(Wallets, #id)();
   IntColumn get partyId => integer().nullable().references(Parties, #id)(); 
+  IntColumn get splitParentId => integer().nullable().references(Transactions, #id)(); 
   DateTimeColumn get date => dateTime()();
   TextColumn get details => text().nullable()();
 }
@@ -43,10 +45,53 @@ class BikeLogs extends Table {
   DateTimeColumn get nextDueDate => dateTime().nullable()(); 
 }
 
-// NEW: Table 5: Shopping List (Bazar List)
+// Table 5: Shopping List
 class ShoppingItems extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get itemName => text()();
-  BoolColumn get isChecked => boolean().withDefault(const Constant(false))(); // Bought or not
-  RealColumn get estimatedCost => real().withDefault(const Constant(0.0))(); // Price entered by user
+  BoolColumn get isChecked => boolean().withDefault(const Constant(false))(); 
+  RealColumn get estimatedCost => real().withDefault(const Constant(0.0))(); 
+}
+
+// Table 6: Custom Categories
+class Categories extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get name => text().withLength(min: 1, max: 50)();
+  TextColumn get type => text()(); 
+  BoolColumn get isSystem => boolean().withDefault(const Constant(false))(); 
+}
+
+// Table 7: Monthly Budgeting
+class Budgets extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get categoryId => integer().references(Categories, #id)();
+  RealColumn get limitAmount => real()(); 
+  IntColumn get month => integer()();     
+  IntColumn get year => integer()();      
+}
+
+// Table 8: Recurring Transactions (UPDATED)
+class RecurringTransactions extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get name => text().withLength(min: 1, max: 100)();
+  RealColumn get amount => real()();      
+  TextColumn get type => text()(); 
+  IntColumn get categoryId => integer().references(Categories, #id)();
+  
+  // NEW: Frequency Column (Daily, Weekly, Monthly, Yearly)
+  TextColumn get frequency => text().withDefault(const Constant('MONTHLY'))();
+  
+  IntColumn get dayOfMonth => integer()(); 
+  DateTimeColumn get lastPaidDate => dateTime().nullable()();
+  DateTimeColumn get nextDueDate => dateTime()(); 
+}
+
+// Table 9: Saving Goals
+class SavingGoals extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get name => text().withLength(min: 1, max: 100)();
+  RealColumn get targetAmount => real()(); 
+  RealColumn get currentAmount => real().withDefault(const Constant(0.0))();
+  DateTimeColumn get targetDate => dateTime().nullable()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }

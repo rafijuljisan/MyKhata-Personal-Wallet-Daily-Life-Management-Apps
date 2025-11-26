@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // Need this for saving settings
+import '../../../data/database.dart'; // Import Database for Factory Reset
+import '../../dashboard/presentation/dashboard_screen.dart'; // Import Dashboard for navigation
 import '../data/backup_service.dart';
 import '../data/language_provider.dart'; 
 import '../data/shop_profile_provider.dart'; 
@@ -17,6 +20,7 @@ class SettingsScreen extends ConsumerStatefulWidget {
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _autoBackupEnabled = true;
   double _retentionDays = 30;
+  String? _lastBackupTime; // New State for Last Backup
 
   @override
   void initState() {
@@ -31,6 +35,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     setState(() {
       _autoBackupEnabled = prefs.getBool('auto_backup_enabled') ?? true;
       _retentionDays = (prefs.getInt('backup_retention_days') ?? 30).toDouble();
+      // Load last backup time
+      final lastTs = prefs.getString('last_backup_timestamp');
+      if (lastTs != null) {
+        final date = DateTime.tryParse(lastTs);
+        if (date != null) {
+          _lastBackupTime = DateFormat('dd MMM yyyy, hh:mm a').format(date);
+        }
+      }
     });
   }
 
@@ -128,7 +140,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
             title: const Text("Auto Backup to Phone", style: TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: const Text("Automatically save backup when app opens"),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text("Automatically save backup when app opens"),
+                if (_lastBackupTime != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4.0),
+                    child: Text("Last Backup: $_lastBackupTime", style: TextStyle(color: Colors.green[700], fontSize: 12, fontWeight: FontWeight.bold)),
+                  ),
+              ],
+            ),
             value: _autoBackupEnabled,
             activeColor: Colors.green,
             onChanged: (val) => _saveBackupSettings(val, _retentionDays),
@@ -142,7 +164,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               value: _retentionDays,
               min: 7,
               max: 60,
-              divisions: 4, // 7, 20, 33, 46, 60 roughly, creates steps
+              divisions: 4, 
               label: "${_retentionDays.toInt()} Days",
               activeColor: Colors.green,
               onChanged: (val) => _saveBackupSettings(_autoBackupEnabled, val),
@@ -191,6 +213,39 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             onTap: () => _confirmRestore(context, ref),
           ),
 
+          const Divider(height: 40),
+
+          // --- SUPPORT & DANGER ZONE ---
+          const Text("Support & Data", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blue)),
+          const SizedBox(height: 10),
+
+          _SettingsTile(
+            icon: Icons.email,
+            title: "Contact Support",
+            subtitle: "Report issues or suggest features",
+            color: Colors.teal,
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text("Contact Us"),
+                  content: const SelectableText("Email: rafijuljisan@gmail.com\nPhone: +880 01957-850240"),
+                  actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Close"))],
+                ),
+              );
+            },
+          ),
+
+          const SizedBox(height: 16),
+
+          _SettingsTile(
+            icon: Icons.delete_forever,
+            title: "Erase All Data (Factory Reset)",
+            subtitle: "Permanently delete everything",
+            color: Colors.red,
+            onTap: () => _confirmFactoryReset(context, ref),
+          ),
+
           const SizedBox(height: 40),
           const Center(child: Text("MyKhata v1.3.0", style: TextStyle(color: Colors.grey))),
         ],
@@ -198,7 +253,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  // --- Helper Dialogs (Same as before) ---
+  // --- Helper Dialogs ---
   void _showEditProfileDialog(BuildContext context, ShopProfile current) {
     final nameCtrl = TextEditingController(text: current.name);
     final addressCtrl = TextEditingController(text: current.address);
@@ -251,6 +306,60 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ],
       ),
     );
+  }
+
+  void _confirmFactoryReset(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Factory Reset", style: TextStyle(color: Colors.red)),
+        content: const Text("Are you ABSOLUTELY sure?\n\nThis will delete:\n- All Transactions\n- All Contacts\n- Budgets & Goals\n- App Lock PIN\n\nThis action cannot be undone."),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancel")),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await _performFactoryReset(ref);
+            },
+            child: const Text("ERASE EVERYTHING"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _performFactoryReset(WidgetRef ref) async {
+    final db = ref.read(databaseProvider);
+    final prefs = await SharedPreferences.getInstance();
+
+    // 1. Clear DB (Delete all rows)
+    await db.transaction(() async {
+      await db.delete(db.transactions).go();
+      await db.delete(db.recurringTransactions).go();
+      await db.delete(db.budgets).go();
+      await db.delete(db.savingGoals).go();
+      await db.delete(db.parties).go();
+      await db.delete(db.categories).go();
+      try { await db.delete(db.shoppingItems).go(); } catch (_) {} // Optional tables
+      try { await db.delete(db.bikeLogs).go(); } catch (_) {}
+    });
+
+    // 2. Clear Prefs (Resets PIN, Profile, etc.)
+    await prefs.clear();
+
+    // 3. Reset UI
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("App Reset Successfully. Restarting...")));
+      await Future.delayed(const Duration(seconds: 2));
+      
+      // Navigate to Dashboard (which will act as fresh start since AuthGuard checks prefs)
+      Navigator.pushAndRemoveUntil(
+        context, 
+        MaterialPageRoute(builder: (_) => const DashboardScreen()), 
+        (route) => false
+      );
+    }
   }
 }
 

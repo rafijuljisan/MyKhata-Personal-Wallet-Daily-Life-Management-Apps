@@ -18,7 +18,6 @@ class _PartyListScreenState extends ConsumerState<PartyListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // This provider now returns List<PartyWithBalance>
     final partyList = ref.watch(partyListProvider);
 
     return Scaffold(
@@ -60,7 +59,6 @@ class _PartyListScreenState extends ConsumerState<PartyListScreen> {
       ),
       body: partyList.when(
         data: (partiesWithBalance) {
-          // Filter Logic (Using PartyWithBalance)
           final filteredItems = partiesWithBalance.where((item) {
             final name = item.party.name.toLowerCase();
             final mobile = item.party.mobile.toLowerCase();
@@ -78,20 +76,36 @@ class _PartyListScreenState extends ConsumerState<PartyListScreen> {
               final party = item.party;
               final balance = item.balance;
 
-              // Color Logic: Green if they owe you (>0), Red if you owe them (<0)
-              final isPositive = balance >= 0;
-              final displayBalance = balance.abs(); 
+              // COLOR LOGIC FIX:
+              // Positive (> 0) = Green (Pabo / Due)
+              // Negative (< 0) = Red (Dibo / Payable)
+              final isPabo = balance > 0;
+              final isDibo = balance < 0;
+              final isSettled = balance == 0;
+
+              Color balanceColor;
+              String statusText;
+
+              if (isPabo) {
+                balanceColor = Colors.green;
+                statusText = "Pabo (Due)";
+              } else if (isDibo) {
+                balanceColor = Colors.red[900]!;
+                statusText = "Dibo (Payable)";
+              } else {
+                balanceColor = Colors.grey;
+                statusText = "Settled";
+              }
 
               return ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: party.type == 'CUSTOMER' ? Colors.green[100] : Colors.orange[100],
+                  backgroundColor: Colors.blue[50],
                   child: Text(party.name[0].toUpperCase(),
-                      style: TextStyle(color: party.type == 'CUSTOMER' ? Colors.green : Colors.orange)),
+                      style: TextStyle(color: Colors.blue[800], fontWeight: FontWeight.bold)),
                 ),
                 title: Text(party.name, style: const TextStyle(fontWeight: FontWeight.bold)),
                 subtitle: Text(party.mobile),
                 
-                // --- Balance Display ---
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -100,18 +114,18 @@ class _PartyListScreenState extends ConsumerState<PartyListScreen> {
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
-                          "৳ ${displayBalance.toStringAsFixed(0)}",
+                          "৳ ${balance.abs().toStringAsFixed(0)}",
                           style: TextStyle(
-                            color: isPositive ? Colors.green : Colors.red[900],
+                            color: balanceColor,
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
                           ),
                         ),
                         Text(
-                          isPositive ? "Pabo (Due)" : "Dibo (Pay)",
+                          statusText,
                           style: TextStyle(
                             fontSize: 10, 
-                            color: isPositive ? Colors.green : Colors.red[900]
+                            color: balanceColor
                           ),
                         ),
                       ],

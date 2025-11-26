@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../data/transaction_repository.dart';
 import 'add_transaction_screen.dart';
-import '../../settings/data/language_provider.dart'; // Import Language Logic
+import '../../settings/data/language_provider.dart';
+import '../../categories/data/category_repository.dart'; // Import for Category Filter
+import '../../../data/database.dart'; // For Category type
 
 class TransactionHistoryScreen extends ConsumerStatefulWidget {
   const TransactionHistoryScreen({super.key});
@@ -17,16 +19,34 @@ class _TransactionHistoryScreenState extends ConsumerState<TransactionHistoryScr
   String _searchQuery = "";
   final TextEditingController _searchController = TextEditingController();
 
-  // New Filters
+  // Filters
   DateTimeRange? _selectedDateRange;
   String _filterType = 'ALL'; // ALL, CASH_IN, CASH_OUT, DUE_GIVEN, DUE_RECEIVED
+  int? _selectedCategoryId; // Category Filter
 
   @override
   Widget build(BuildContext context) {
     final history = ref.watch(allTransactionsProvider);
     final lang = ref.watch(languageProvider);
+    
+    // Load categories for filter dropdown
+    final incomeCats = ref.watch(incomeCategoriesProvider);
+    final expenseCats = ref.watch(expenseCategoriesProvider);
+    
+    // IMPROVEMENT: Dynamically filter categories based on selected Type
+    List<Category> displayedCategories = [];
+    final allIncome = incomeCats.value ?? [];
+    final allExpense = expenseCats.value ?? [];
 
-    // Helper for Dropdown Labels
+    if (_filterType == 'CASH_IN') {
+      displayedCategories = allIncome;
+    } else if (_filterType == 'CASH_OUT') {
+      displayedCategories = allExpense;
+    } else {
+      // For ALL or other types, show everything
+      displayedCategories = [...allIncome, ...allExpense];
+    }
+
     String getLabel(String type) {
       switch(type) {
         case 'ALL': return lang == 'bn' ? 'সকল লেনদেন' : 'All Transactions';
@@ -78,15 +98,17 @@ class _TransactionHistoryScreenState extends ConsumerState<TransactionHistoryScr
             color: Colors.teal.shade50,
             child: ExpansionTile(
               title: Text(
-                _selectedDateRange == null && _filterType == 'ALL' 
-                    ? (lang == 'bn' ? "ফিল্টার (তারিখ ও ধরণ)" : "Filter (Date & Type)")
+                _selectedDateRange == null && _filterType == 'ALL' && _selectedCategoryId == null
+                    ? (lang == 'bn' ? "ফিল্টার (তারিখ ও ধরণ)" : "Filter Options")
                     : (lang == 'bn' ? "ফিল্টার চালু আছে" : "Filters Active"),
                 style: TextStyle(
-                  color: _selectedDateRange != null || _filterType != 'ALL' ? Colors.red : Colors.black87,
+                  color: (_selectedDateRange != null || _filterType != 'ALL' || _selectedCategoryId != null) 
+                      ? Colors.red 
+                      : Colors.black87,
                   fontWeight: FontWeight.bold
                 ),
               ),
-              leading: Icon(Icons.filter_list, color: Colors.red[900]),
+              leading: Icon(Icons.filter_list, color: Colors.teal[800]),
               children: [
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -96,7 +118,7 @@ class _TransactionHistoryScreenState extends ConsumerState<TransactionHistoryScr
                       OutlinedButton.icon(
                         style: OutlinedButton.styleFrom(
                           minimumSize: const Size(double.infinity, 45),
-                          side: BorderSide(color: Colors.red),
+                          side: const BorderSide(color: Colors.teal),
                         ),
                         onPressed: () async {
                           final picked = await showDateRangePicker(
@@ -104,20 +126,10 @@ class _TransactionHistoryScreenState extends ConsumerState<TransactionHistoryScr
                             firstDate: DateTime(2020),
                             lastDate: DateTime.now(),
                             initialDateRange: _selectedDateRange,
-                            builder: (context, child) {
-                              return Theme(
-                                data: Theme.of(context).copyWith(
-                                  colorScheme: ColorScheme.light(primary: Colors.red),
-                                ),
-                                child: child!,
-                              );
-                            }
                           );
-                          if (picked != null) {
-                            setState(() => _selectedDateRange = picked);
-                          }
+                          if (picked != null) setState(() => _selectedDateRange = picked);
                         },
-                        icon: Icon(Icons.date_range, color: Colors.red),
+                        icon: const Icon(Icons.date_range, color: Colors.teal),
                         label: Text(
                           _selectedDateRange == null 
                             ? (lang == 'bn' ? "তারিখ নির্বাচন করুন" : "Select Date Range")
@@ -127,24 +139,40 @@ class _TransactionHistoryScreenState extends ConsumerState<TransactionHistoryScr
                       ),
                       const SizedBox(height: 10),
                       
-                      // Type Dropdown
-                      DropdownButtonFormField<String>(
-                        value: _filterType,
-                        decoration: const InputDecoration(
-                          border: OutlineInputBorder(),
-                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          isDense: true,
-                        ),
-                        items: ['ALL', 'CASH_IN', 'CASH_OUT', 'DUE_GIVEN', 'DUE_RECEIVED']
-                            .map((type) => DropdownMenuItem(
-                              value: type,
-                              child: Text(getLabel(type), style: const TextStyle(fontSize: 14)),
-                            )).toList(),
-                        onChanged: (val) => setState(() => _filterType = val!),
+                      Row(
+                        children: [
+                          // Type Filter
+                          Expanded(
+                            child: DropdownButtonFormField<String>(
+                              value: _filterType,
+                              decoration: const InputDecoration(labelText: "Type", border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 10)),
+                              items: ['ALL', 'CASH_IN', 'CASH_OUT', 'DUE_GIVEN', 'DUE_RECEIVED']
+                                  .map((type) => DropdownMenuItem(value: type, child: Text(getLabel(type), style: const TextStyle(fontSize: 13)))).toList(),
+                              onChanged: (val) => setState(() {
+                                _filterType = val!;
+                                // Reset Category selection when Type changes to prevent invalid state
+                                _selectedCategoryId = null; 
+                              }),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          // Category Filter (Dynamic based on Type)
+                          Expanded(
+                            child: DropdownButtonFormField<int?>(
+                              value: _selectedCategoryId,
+                              decoration: const InputDecoration(labelText: "Category", border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 10)),
+                              items: [
+                                const DropdownMenuItem<int?>(value: null, child: Text("All Categories")),
+                                ...displayedCategories.map((cat) => DropdownMenuItem(value: cat.id, child: Text(cat.name, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13))))
+                              ],
+                              onChanged: (val) => setState(() => _selectedCategoryId = val),
+                            ),
+                          ),
+                        ],
                       ),
                       
                       // Clear Button
-                      if (_selectedDateRange != null || _filterType != 'ALL')
+                      if (_selectedDateRange != null || _filterType != 'ALL' || _selectedCategoryId != null)
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(
@@ -152,9 +180,10 @@ class _TransactionHistoryScreenState extends ConsumerState<TransactionHistoryScr
                               setState(() {
                                 _selectedDateRange = null;
                                 _filterType = 'ALL';
+                                _selectedCategoryId = null;
                               });
                             },
-                            child: Text(lang == 'bn' ? "ফিল্টার মুছুন" : "Clear Filters", style: TextStyle(color: Colors.red)),
+                            child: Text(lang == 'bn' ? "ফিল্টার মুছুন" : "Clear Filters", style: const TextStyle(color: Colors.red)),
                           ),
                         ),
                     ],
@@ -175,7 +204,13 @@ class _TransactionHistoryScreenState extends ConsumerState<TransactionHistoryScr
                   final note = (txn.details ?? "").toLowerCase();
                   final amount = txn.amount.toString();
                   final partyName = (item.party?.name ?? "").toLowerCase();
-                  final matchesSearch = note.contains(_searchQuery) || amount.contains(_searchQuery) || partyName.contains(_searchQuery);
+                  final catName = (item.category?.name ?? "").toLowerCase();
+                  
+                  final matchesSearch = note.contains(_searchQuery) || 
+                                        amount.contains(_searchQuery) || 
+                                        partyName.contains(_searchQuery) ||
+                                        catName.contains(_searchQuery);
+                  
                   if (!matchesSearch) return false;
 
                   // 2. Date Filter
@@ -193,6 +228,11 @@ class _TransactionHistoryScreenState extends ConsumerState<TransactionHistoryScr
                     if (txn.txnType != _filterType) return false;
                   }
 
+                  // 4. Category Filter
+                  if (_selectedCategoryId != null) {
+                    if (txn.categoryId != _selectedCategoryId) return false;
+                  }
+
                   return true;
                 }).toList();
 
@@ -206,21 +246,25 @@ class _TransactionHistoryScreenState extends ConsumerState<TransactionHistoryScr
                     final item = filteredData[index];
                     final txn = item.transaction;
                     final party = item.party;
+                    final category = item.category;
 
                     Color color;
                     IconData icon;
                     String title;
                     
+                    // Determine Icon & Title based on Data
                     switch (txn.txnType) {
                       case 'CASH_IN':
-                        color = Colors.teal;
+                        color = Colors.green;
                         icon = Icons.arrow_downward;
-                        title = AppStrings.get('cash_in', lang);
+                        // Show Category Name if available, else "Cash In"
+                        title = category?.name ?? AppStrings.get('cash_in', lang);
                         break;
                       case 'CASH_OUT':
                         color = Colors.redAccent;
                         icon = Icons.arrow_upward;
-                        title = AppStrings.get('cash_out', lang);
+                        // Show Category Name if available (e.g. "Food"), else "Cash Out"
+                        title = category?.name ?? AppStrings.get('cash_out', lang);
                         break;
                       case 'DUE_GIVEN':
                         color = Colors.red;
@@ -232,6 +276,12 @@ class _TransactionHistoryScreenState extends ConsumerState<TransactionHistoryScr
                         icon = Icons.person_add;
                         title = "${AppStrings.get('got', lang)}: ${party?.name ?? ''}";
                         break;
+                      case 'TRANSFER_OUT':
+                      case 'TRANSFER_IN':
+                        color = Colors.blueGrey;
+                        icon = Icons.swap_horiz;
+                        title = "Transfer";
+                        break;
                       default:
                         color = Colors.grey;
                         icon = Icons.help;
@@ -240,7 +290,7 @@ class _TransactionHistoryScreenState extends ConsumerState<TransactionHistoryScr
 
                     return Card(
                       margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                      elevation: 2,
+                      elevation: 1,
                       child: ListTile(
                         leading: CircleAvatar(
                           backgroundColor: color.withOpacity(0.1),
@@ -249,7 +299,9 @@ class _TransactionHistoryScreenState extends ConsumerState<TransactionHistoryScr
                         title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
                         subtitle: Text(
                           "${DateFormat('dd MMM hh:mm a').format(txn.date)}\n${txn.details ?? ''}",
-                          style: const TextStyle(fontSize: 12),
+                          style: const TextStyle(fontSize: 12, color: Colors.black54),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
                         isThreeLine: true,
                         trailing: Text(
@@ -262,7 +314,7 @@ class _TransactionHistoryScreenState extends ConsumerState<TransactionHistoryScr
                             builder: (ctx) => Wrap(
                               children: [
                                 ListTile(
-                                  leading: Icon(Icons.edit, color: Colors.red),
+                                  leading: const Icon(Icons.edit, color: Colors.blue),
                                   title: Text(AppStrings.get('edit', lang)),
                                   onTap: () {
                                     Navigator.pop(ctx);
@@ -275,7 +327,7 @@ class _TransactionHistoryScreenState extends ConsumerState<TransactionHistoryScr
                                   },
                                 ),
                                 ListTile(
-                                  leading: Icon(Icons.delete, color: Colors.red),
+                                  leading: const Icon(Icons.delete, color: Colors.red),
                                   title: Text(AppStrings.get('delete', lang)),
                                   onTap: () {
                                     Navigator.pop(ctx);

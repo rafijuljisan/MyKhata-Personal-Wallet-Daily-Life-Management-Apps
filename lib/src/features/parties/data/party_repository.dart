@@ -4,7 +4,8 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:rxdart/rxdart.dart'; 
 import 'package:my_khata/src/data/database.dart';
 import 'package:my_khata/src/data/tables.dart';
-import '../../wallets/data/wallet_provider.dart'; // Import Wallet Provider
+// Removed wallet provider import as it's no longer needed for the list calculation
+// import '../../wallets/data/wallet_provider.dart'; 
 
 part 'party_repository.g.dart';
 
@@ -40,25 +41,28 @@ class PartyWithBalance {
   PartyWithBalance(this.party, this.balance);
 }
 
-// 2. Logic to Get List (Updated for Multi-Wallet Balance)
+// 2. Logic to Get List (Updated for GLOBAL Balance)
+// This calculates balance based on ALL transactions, not just the active wallet.
 final partyListProvider = StreamProvider<List<PartyWithBalance>>((ref) {
   final db = ref.watch(databaseProvider);
-  final walletId = ref.watch(activeWalletIdProvider); // Watch Wallet
+  // Removed: final walletId = ref.watch(activeWalletIdProvider); 
   
   final partiesStream = db.select(db.parties).watch();
   
-  // Only fetch transactions for THIS wallet to calculate balance
-  final transactionsStream = (db.select(db.transactions)
-        ..where((t) => t.walletId.equals(walletId)))
-        .watch();
+  // Fetch ALL transactions to calculate true global balance
+  final transactionsStream = db.select(db.transactions).watch();
 
   return Rx.combineLatest2(partiesStream, transactionsStream, 
     (List<Party> parties, List<Transaction> transactions) {
       return parties.map((party) {
         double bal = party.initialBalance; 
+        
         for (var t in transactions) {
           if (t.partyId == party.id) {
+            // DUE_GIVEN = I gave money/goods -> Balance increases (They owe me)
             if (t.txnType == 'DUE_GIVEN') bal += t.amount;
+            
+            // DUE_RECEIVED = I received money -> Balance decreases
             if (t.txnType == 'DUE_RECEIVED') bal -= t.amount;
           }
         }

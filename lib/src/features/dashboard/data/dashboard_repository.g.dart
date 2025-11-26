@@ -40,7 +40,7 @@ final class CashInHandProvider
   }
 }
 
-String _$cashInHandHash() => r'baed67cef8a4c3695f3680a25a523f022d0deac0';
+String _$cashInHandHash() => r'6a5571ab8b0fafb0ed7ddaa8ff2cf00683f97e83';
 
 @ProviderFor(totalReceivables)
 const totalReceivablesProvider = TotalReceivablesProvider._();
@@ -73,7 +73,7 @@ final class TotalReceivablesProvider
   }
 }
 
-String _$totalReceivablesHash() => r'a17c61bd20dfdb7337960cda89c47a307b85fb6b';
+String _$totalReceivablesHash() => r'b25f65251830423ef5db8382fe4c669e46e16c68';
 
 @ProviderFor(totalPayables)
 const totalPayablesProvider = TotalPayablesProvider._();
@@ -106,4 +106,4 @@ final class TotalPayablesProvider
   }
 }
 
-String _$totalPayablesHash() => r'42b433d181e7e5e4aafc82b1ddc13ddf4aa4b8a9';
+String _$totalPayablesHash() => r'4c060ceb4ba27d3d707e4ae5fb62253c84a801f2';
