@@ -9,6 +9,7 @@ import '../data/language_provider.dart';
 import '../data/shop_profile_provider.dart'; 
 import '../data/security_service.dart'; 
 import 'pin_screen.dart'; 
+import '../../categories/presentation/category_screen.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -104,6 +105,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             },
           ),
           const Divider(height: 30),
+
+          const SizedBox(height: 20), // Add some spacing
+
+          _SettingsTile(
+            icon: Icons.category,
+            title: "Manage Categories",
+            subtitle: "Add, edit or delete income/expense categories",
+            color: Colors.purple,
+            onTap: () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const CategoryScreen()));
+            },
+          ),
+
+          const Divider(height: 30), // Existing Divider
 
           // --- BUSINESS PROFILE ---
           const Text("Business Profile", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blue)),

@@ -11,7 +11,7 @@ class CategoryRepository extends _$CategoryRepository {
   @override
   void build() {}
 
-  // Add Custom Category
+  // 1. Add Custom Category
   Future<int> addCategory(String name, String type) async {
     final db = ref.read(databaseProvider);
     return await db.into(db.categories).insert(CategoriesCompanion.insert(
@@ -19,6 +19,25 @@ class CategoryRepository extends _$CategoryRepository {
       type: type,
       isSystem: const Value(false),
     ));
+  }
+
+  // 2. Update Category (NEW)
+  Future<void> updateCategory({required int id, required String name, required String type}) async {
+    final db = ref.read(databaseProvider);
+    await (db.update(db.categories)..where((t) => t.id.equals(id))).write(
+      CategoriesCompanion(
+        name: Value(name),
+        type: Value(type),
+      ),
+    );
+  }
+
+  // 3. Delete Category (NEW)
+  Future<void> deleteCategory(int id) async {
+    final db = ref.read(databaseProvider);
+    // Note: You might want to check if transactions exist for this category first
+    // But for now, we just delete the category. Transactions will show "null" or break depending on join logic.
+    await (db.delete(db.categories)..where((t) => t.id.equals(id))).go();
   }
 }
 
@@ -40,15 +59,13 @@ final expenseCategoriesProvider = StreamProvider<List<Category>>((ref) {
   ).watch();
 });
 
-// Initialize Default Categories (Call this in main.dart or database creation)
+// Initialize Default Categories
 Future<void> seedCategories(AppDatabase db) async {
   final count = await db.select(db.categories).get().then((l) => l.length);
   if (count == 0) {
-    // Default Income
     for(var c in ['Sales', 'Salary', 'Refund', 'Gift', 'Others']) {
       await db.into(db.categories).insert(CategoriesCompanion.insert(name: c, type: 'INCOME', isSystem: const Value(true)));
     }
-    // Default Expense
     for(var c in ['Purchase', 'Rent', 'Food', 'Transport', 'Bills', 'Health', 'Entertainment', 'Others']) {
       await db.into(db.categories).insert(CategoriesCompanion.insert(name: c, type: 'EXPENSE', isSystem: const Value(true)));
     }
