@@ -28,8 +28,14 @@ class BackupService {
     final allRecurring = await db.select(db.recurringTransactions).get();
     final allSavings = await db.select(db.savingGoals).get();
 
+    final allBloodDonations = await db.select(db.bloodDonations).get();
+    final allBikeLogs = await db.select(db.bikeLogs).get();
+
+    final allWallets = await db.select(db.wallets).get();
+    final allShoppingItems = await db.select(db.shoppingItems).get();
+
     final data = {
-      "version": 2, // Bumped version to indicate new schema
+      "version": 4, // Bumped version to indicate new schema
       "date": DateTime.now().toIso8601String(),
       
       // 1. Parties
@@ -90,6 +96,44 @@ class BackupService {
         "currentAmount": s.currentAmount,
         "targetDate": s.targetDate?.toIso8601String(),
         "createdAt": s.createdAt.toIso8601String(),
+      }).toList(),
+
+      // 7. Blood Donations
+      "bloodDonations": allBloodDonations.map((b) => {
+        "id": b.id,
+        "donateDate": b.donateDate.toIso8601String(),
+        "location": b.location,
+        "patientName": b.patientName,
+        "note": b.note,
+      }).toList(),
+
+      // 8. Bike Logs
+      "bikeLogs": allBikeLogs.map((b) => {
+        "id": b.id,
+        "logType": b.logType,
+        "odometer": b.odometer,
+        "cost": b.cost,
+        "quantity": b.quantity,
+        "note": b.note,
+        "date": b.date.toIso8601String(),
+        "nextDueKm": b.nextDueKm,
+        "nextDueDate": b.nextDueDate?.toIso8601String(),
+      }).toList(),
+
+      // 9. Wallets
+      "wallets": allWallets.map((w) => {
+        "id": w.id,
+        "name": w.name,
+        "type": w.type,
+        "isDefault": w.isDefault,
+      }).toList(),
+
+      // 10. Shopping Items
+      "shoppingItems": allShoppingItems.map((s) => {
+        "id": s.id,
+        "itemName": s.itemName,
+        "isChecked": s.isChecked,
+        "estimatedCost": s.estimatedCost,
       }).toList(),
     };
 
@@ -196,7 +240,22 @@ class BackupService {
         batch.deleteWhere(db.savingGoals, (t) => const Constant(true));
         batch.deleteWhere(db.parties, (t) => const Constant(true));
         batch.deleteWhere(db.categories, (t) => const Constant(true));
+        batch.deleteWhere(db.bloodDonations, (t) => const Constant(true));
+        batch.deleteWhere(db.bikeLogs, (t) => const Constant(true));
+        batch.deleteWhere(db.wallets, (t) => const Constant(true));
+        batch.deleteWhere(db.shoppingItems, (t) => const Constant(true));
 
+        // 2. Restore Wallets FIRST (since transactions reference wallets)
+          if (data.containsKey('wallets')) {
+            for (var w in data['wallets']) {
+              batch.insert(db.wallets, WalletsCompanion.insert(
+                id: Value(w['id']),
+                name: w['name'],
+                type: Value(w['type']),
+                isDefault: Value(w['isDefault'] ?? false),
+              ), mode: InsertMode.insertOrReplace);
+            }
+          }
         // 2. Restore Categories (Dependencies first)
         if (data.containsKey('categories')) {
           for (var c in data['categories']) {
@@ -280,6 +339,46 @@ class BackupService {
             ));
           }
         }
+        // 8. Restore Blood Donations
+        if (data.containsKey('bloodDonations')) {
+          for (var b in data['bloodDonations']) {
+            batch.insert(db.bloodDonations, BloodDonationsCompanion.insert(
+              id: Value(b['id']),
+              donateDate: DateTime.parse(b['donateDate']),
+              location: Value(b['location']),
+              patientName: Value(b['patientName']),
+              note: Value(b['note']),
+            ));
+          }
+        }
+
+        // 9. Restore Bike Logs
+        if (data.containsKey('bikeLogs')) {
+          for (var b in data['bikeLogs']) {
+            batch.insert(db.bikeLogs, BikeLogsCompanion.insert(
+              id: Value(b['id']),
+              logType: b['logType'],
+              odometer: b['odometer'],
+              cost: b['cost'],
+              quantity: Value(b['quantity']),
+              note: Value(b['note']),
+              date: DateTime.parse(b['date']),
+              nextDueKm: Value(b['nextDueKm']),
+              nextDueDate: b['nextDueDate'] != null ? Value(DateTime.parse(b['nextDueDate'])) : const Value(null),
+            ));
+          }
+        }
+        // 11. Restore Shopping Items
+          if (data.containsKey('shoppingItems')) {
+            for (var s in data['shoppingItems']) {
+              batch.insert(db.shoppingItems, ShoppingItemsCompanion.insert(
+                id: Value(s['id']),
+                itemName: s['itemName'],
+                isChecked: Value(s['isChecked'] ?? false),
+                estimatedCost: Value(s['estimatedCost'] ?? 0.0),
+              ));
+            }
+          }
       });
 
       return true;

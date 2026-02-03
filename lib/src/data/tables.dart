@@ -95,3 +95,11 @@ class SavingGoals extends Table {
   DateTimeColumn get targetDate => dateTime().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }
+// Table 10: Blood Donation History
+class BloodDonations extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  DateTimeColumn get donateDate => dateTime()();
+  TextColumn get location => text().nullable()(); // Hospital or Place
+  TextColumn get patientName => text().nullable()(); // Who you donated to
+  TextColumn get note => text().nullable()();
+}

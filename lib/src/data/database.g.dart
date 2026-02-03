@@ -3814,6 +3814,364 @@ class SavingGoalsCompanion extends UpdateCompanion<SavingGoal> {
   }
 }
 
+class $BloodDonationsTable extends BloodDonations
+    with TableInfo<$BloodDonationsTable, BloodDonation> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $BloodDonationsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _donateDateMeta = const VerificationMeta(
+    'donateDate',
+  );
+  @override
+  late final GeneratedColumn<DateTime> donateDate = GeneratedColumn<DateTime>(
+    'donate_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _locationMeta = const VerificationMeta(
+    'location',
+  );
+  @override
+  late final GeneratedColumn<String> location = GeneratedColumn<String>(
+    'location',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _patientNameMeta = const VerificationMeta(
+    'patientName',
+  );
+  @override
+  late final GeneratedColumn<String> patientName = GeneratedColumn<String>(
+    'patient_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _noteMeta = const VerificationMeta('note');
+  @override
+  late final GeneratedColumn<String> note = GeneratedColumn<String>(
+    'note',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    donateDate,
+    location,
+    patientName,
+    note,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'blood_donations';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<BloodDonation> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('donate_date')) {
+      context.handle(
+        _donateDateMeta,
+        donateDate.isAcceptableOrUnknown(data['donate_date']!, _donateDateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_donateDateMeta);
+    }
+    if (data.containsKey('location')) {
+      context.handle(
+        _locationMeta,
+        location.isAcceptableOrUnknown(data['location']!, _locationMeta),
+      );
+    }
+    if (data.containsKey('patient_name')) {
+      context.handle(
+        _patientNameMeta,
+        patientName.isAcceptableOrUnknown(
+          data['patient_name']!,
+          _patientNameMeta,
+        ),
+      );
+    }
+    if (data.containsKey('note')) {
+      context.handle(
+        _noteMeta,
+        note.isAcceptableOrUnknown(data['note']!, _noteMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  BloodDonation map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return BloodDonation(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      donateDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}donate_date'],
+      )!,
+      location: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}location'],
+      ),
+      patientName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}patient_name'],
+      ),
+      note: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}note'],
+      ),
+    );
+  }
+
+  @override
+  $BloodDonationsTable createAlias(String alias) {
+    return $BloodDonationsTable(attachedDatabase, alias);
+  }
+}
+
+class BloodDonation extends DataClass implements Insertable<BloodDonation> {
+  final int id;
+  final DateTime donateDate;
+  final String? location;
+  final String? patientName;
+  final String? note;
+  const BloodDonation({
+    required this.id,
+    required this.donateDate,
+    this.location,
+    this.patientName,
+    this.note,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['donate_date'] = Variable<DateTime>(donateDate);
+    if (!nullToAbsent || location != null) {
+      map['location'] = Variable<String>(location);
+    }
+    if (!nullToAbsent || patientName != null) {
+      map['patient_name'] = Variable<String>(patientName);
+    }
+    if (!nullToAbsent || note != null) {
+      map['note'] = Variable<String>(note);
+    }
+    return map;
+  }
+
+  BloodDonationsCompanion toCompanion(bool nullToAbsent) {
+    return BloodDonationsCompanion(
+      id: Value(id),
+      donateDate: Value(donateDate),
+      location: location == null && nullToAbsent
+          ? const Value.absent()
+          : Value(location),
+      patientName: patientName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(patientName),
+      note: note == null && nullToAbsent ? const Value.absent() : Value(note),
+    );
+  }
+
+  factory BloodDonation.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return BloodDonation(
+      id: serializer.fromJson<int>(json['id']),
+      donateDate: serializer.fromJson<DateTime>(json['donateDate']),
+      location: serializer.fromJson<String?>(json['location']),
+      patientName: serializer.fromJson<String?>(json['patientName']),
+      note: serializer.fromJson<String?>(json['note']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'donateDate': serializer.toJson<DateTime>(donateDate),
+      'location': serializer.toJson<String?>(location),
+      'patientName': serializer.toJson<String?>(patientName),
+      'note': serializer.toJson<String?>(note),
+    };
+  }
+
+  BloodDonation copyWith({
+    int? id,
+    DateTime? donateDate,
+    Value<String?> location = const Value.absent(),
+    Value<String?> patientName = const Value.absent(),
+    Value<String?> note = const Value.absent(),
+  }) => BloodDonation(
+    id: id ?? this.id,
+    donateDate: donateDate ?? this.donateDate,
+    location: location.present ? location.value : this.location,
+    patientName: patientName.present ? patientName.value : this.patientName,
+    note: note.present ? note.value : this.note,
+  );
+  BloodDonation copyWithCompanion(BloodDonationsCompanion data) {
+    return BloodDonation(
+      id: data.id.present ? data.id.value : this.id,
+      donateDate: data.donateDate.present
+          ? data.donateDate.value
+          : this.donateDate,
+      location: data.location.present ? data.location.value : this.location,
+      patientName: data.patientName.present
+          ? data.patientName.value
+          : this.patientName,
+      note: data.note.present ? data.note.value : this.note,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('BloodDonation(')
+          ..write('id: $id, ')
+          ..write('donateDate: $donateDate, ')
+          ..write('location: $location, ')
+          ..write('patientName: $patientName, ')
+          ..write('note: $note')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, donateDate, location, patientName, note);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is BloodDonation &&
+          other.id == this.id &&
+          other.donateDate == this.donateDate &&
+          other.location == this.location &&
+          other.patientName == this.patientName &&
+          other.note == this.note);
+}
+
+class BloodDonationsCompanion extends UpdateCompanion<BloodDonation> {
+  final Value<int> id;
+  final Value<DateTime> donateDate;
+  final Value<String?> location;
+  final Value<String?> patientName;
+  final Value<String?> note;
+  const BloodDonationsCompanion({
+    this.id = const Value.absent(),
+    this.donateDate = const Value.absent(),
+    this.location = const Value.absent(),
+    this.patientName = const Value.absent(),
+    this.note = const Value.absent(),
+  });
+  BloodDonationsCompanion.insert({
+    this.id = const Value.absent(),
+    required DateTime donateDate,
+    this.location = const Value.absent(),
+    this.patientName = const Value.absent(),
+    this.note = const Value.absent(),
+  }) : donateDate = Value(donateDate);
+  static Insertable<BloodDonation> custom({
+    Expression<int>? id,
+    Expression<DateTime>? donateDate,
+    Expression<String>? location,
+    Expression<String>? patientName,
+    Expression<String>? note,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (donateDate != null) 'donate_date': donateDate,
+      if (location != null) 'location': location,
+      if (patientName != null) 'patient_name': patientName,
+      if (note != null) 'note': note,
+    });
+  }
+
+  BloodDonationsCompanion copyWith({
+    Value<int>? id,
+    Value<DateTime>? donateDate,
+    Value<String?>? location,
+    Value<String?>? patientName,
+    Value<String?>? note,
+  }) {
+    return BloodDonationsCompanion(
+      id: id ?? this.id,
+      donateDate: donateDate ?? this.donateDate,
+      location: location ?? this.location,
+      patientName: patientName ?? this.patientName,
+      note: note ?? this.note,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (donateDate.present) {
+      map['donate_date'] = Variable<DateTime>(donateDate.value);
+    }
+    if (location.present) {
+      map['location'] = Variable<String>(location.value);
+    }
+    if (patientName.present) {
+      map['patient_name'] = Variable<String>(patientName.value);
+    }
+    if (note.present) {
+      map['note'] = Variable<String>(note.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('BloodDonationsCompanion(')
+          ..write('id: $id, ')
+          ..write('donateDate: $donateDate, ')
+          ..write('location: $location, ')
+          ..write('patientName: $patientName, ')
+          ..write('note: $note')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -3827,6 +4185,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $RecurringTransactionsTable recurringTransactions =
       $RecurringTransactionsTable(this);
   late final $SavingGoalsTable savingGoals = $SavingGoalsTable(this);
+  late final $BloodDonationsTable bloodDonations = $BloodDonationsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3841,6 +4200,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     budgets,
     recurringTransactions,
     savingGoals,
+    bloodDonations,
   ];
 }
 
@@ -7016,6 +7376,206 @@ typedef $$SavingGoalsTableProcessedTableManager =
       SavingGoal,
       PrefetchHooks Function()
     >;
+typedef $$BloodDonationsTableCreateCompanionBuilder =
+    BloodDonationsCompanion Function({
+      Value<int> id,
+      required DateTime donateDate,
+      Value<String?> location,
+      Value<String?> patientName,
+      Value<String?> note,
+    });
+typedef $$BloodDonationsTableUpdateCompanionBuilder =
+    BloodDonationsCompanion Function({
+      Value<int> id,
+      Value<DateTime> donateDate,
+      Value<String?> location,
+      Value<String?> patientName,
+      Value<String?> note,
+    });
+
+class $$BloodDonationsTableFilterComposer
+    extends Composer<_$AppDatabase, $BloodDonationsTable> {
+  $$BloodDonationsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get donateDate => $composableBuilder(
+    column: $table.donateDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get location => $composableBuilder(
+    column: $table.location,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get patientName => $composableBuilder(
+    column: $table.patientName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$BloodDonationsTableOrderingComposer
+    extends Composer<_$AppDatabase, $BloodDonationsTable> {
+  $$BloodDonationsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get donateDate => $composableBuilder(
+    column: $table.donateDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get location => $composableBuilder(
+    column: $table.location,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get patientName => $composableBuilder(
+    column: $table.patientName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$BloodDonationsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $BloodDonationsTable> {
+  $$BloodDonationsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get donateDate => $composableBuilder(
+    column: $table.donateDate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get location =>
+      $composableBuilder(column: $table.location, builder: (column) => column);
+
+  GeneratedColumn<String> get patientName => $composableBuilder(
+    column: $table.patientName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get note =>
+      $composableBuilder(column: $table.note, builder: (column) => column);
+}
+
+class $$BloodDonationsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $BloodDonationsTable,
+          BloodDonation,
+          $$BloodDonationsTableFilterComposer,
+          $$BloodDonationsTableOrderingComposer,
+          $$BloodDonationsTableAnnotationComposer,
+          $$BloodDonationsTableCreateCompanionBuilder,
+          $$BloodDonationsTableUpdateCompanionBuilder,
+          (
+            BloodDonation,
+            BaseReferences<_$AppDatabase, $BloodDonationsTable, BloodDonation>,
+          ),
+          BloodDonation,
+          PrefetchHooks Function()
+        > {
+  $$BloodDonationsTableTableManager(
+    _$AppDatabase db,
+    $BloodDonationsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$BloodDonationsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$BloodDonationsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$BloodDonationsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<DateTime> donateDate = const Value.absent(),
+                Value<String?> location = const Value.absent(),
+                Value<String?> patientName = const Value.absent(),
+                Value<String?> note = const Value.absent(),
+              }) => BloodDonationsCompanion(
+                id: id,
+                donateDate: donateDate,
+                location: location,
+                patientName: patientName,
+                note: note,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required DateTime donateDate,
+                Value<String?> location = const Value.absent(),
+                Value<String?> patientName = const Value.absent(),
+                Value<String?> note = const Value.absent(),
+              }) => BloodDonationsCompanion.insert(
+                id: id,
+                donateDate: donateDate,
+                location: location,
+                patientName: patientName,
+                note: note,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$BloodDonationsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $BloodDonationsTable,
+      BloodDonation,
+      $$BloodDonationsTableFilterComposer,
+      $$BloodDonationsTableOrderingComposer,
+      $$BloodDonationsTableAnnotationComposer,
+      $$BloodDonationsTableCreateCompanionBuilder,
+      $$BloodDonationsTableUpdateCompanionBuilder,
+      (
+        BloodDonation,
+        BaseReferences<_$AppDatabase, $BloodDonationsTable, BloodDonation>,
+      ),
+      BloodDonation,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -7038,6 +7598,8 @@ class $AppDatabaseManager {
       $$RecurringTransactionsTableTableManager(_db, _db.recurringTransactions);
   $$SavingGoalsTableTableManager get savingGoals =>
       $$SavingGoalsTableTableManager(_db, _db.savingGoals);
+  $$BloodDonationsTableTableManager get bloodDonations =>
+      $$BloodDonationsTableTableManager(_db, _db.bloodDonations);
 }
 
 // **************************************************************************

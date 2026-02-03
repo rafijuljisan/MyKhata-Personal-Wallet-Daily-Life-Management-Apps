@@ -9,12 +9,12 @@ import 'tables.dart';
 
 part 'database.g.dart';
 
-@DriftDatabase(tables: [Wallets, Parties, Transactions, BikeLogs, ShoppingItems, Categories, Budgets, RecurringTransactions, SavingGoals]) 
+@DriftDatabase(tables: [Wallets, Parties, Transactions, BikeLogs, ShoppingItems, Categories, Budgets, RecurringTransactions, SavingGoals, BloodDonations]) 
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 8; // Bumped to 8
+  int get schemaVersion => 9; // Bumped to 9
 
   @override
   MigrationStrategy get migration {
@@ -43,6 +43,10 @@ class AppDatabase extends _$AppDatabase {
         if (from < 8) {
           // Version 8: Add Frequency to RecurringTransactions
           await m.addColumn(recurringTransactions, recurringTransactions.frequency);
+        }
+        if (from < 9) {
+          // Version 9: Add BloodDonations table
+          await m.createTable(bloodDonations);
         }
       },
     );

@@ -73,7 +73,7 @@ final class TotalReceivablesProvider
   }
 }
 
-String _$totalReceivablesHash() => r'b25f65251830423ef5db8382fe4c669e46e16c68';
+String _$totalReceivablesHash() => r'614b8e03d408dea8bbdd0f2033a28e907aef7e2a';
 
 @ProviderFor(totalPayables)
 const totalPayablesProvider = TotalPayablesProvider._();
@@ -106,4 +106,4 @@ final class TotalPayablesProvider
   }
 }
 
-String _$totalPayablesHash() => r'4c060ceb4ba27d3d707e4ae5fb62253c84a801f2';
+String _$totalPayablesHash() => r'c75f84475e9d4edd6ff19353a42af2294c46d586';

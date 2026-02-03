@@ -23,6 +23,7 @@ import '../../shopping/presentation/shopping_list_screen.dart';
 import '../../budget/presentation/budget_screen.dart';
 import '../../recurring/presentation/recurring_bill_screen.dart';
 import '../../savings/presentation/saving_goal_screen.dart';
+import '../../../../blood/presentation/blood_donation_screen.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -169,9 +170,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       _MenuIcon(Icons.account_balance_wallet, "Wallets", Colors.cyan, 
                         () => Navigator.push(context, MaterialPageRoute(builder: (_) => const WalletScreen()))),
 
-                      // 12. Settings
-                      _MenuIcon(Icons.settings, AppStrings.get('settings', lang), Colors.grey.shade700, 
-                        () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()))),
+                      // 12. Blood Donation (NEW)
+                      _MenuIcon(Icons.bloodtype, 
+                        "Blood Bank", 
+                        Colors.red, 
+                        () => Navigator.push(context, MaterialPageRoute(builder: (_) => BloodDonationScreen()))),
                     ],
                   ),
                 ),

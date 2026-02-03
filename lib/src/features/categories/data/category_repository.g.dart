@@ -42,7 +42,7 @@ final class CategoryRepositoryProvider
 }
 
 String _$categoryRepositoryHash() =>
-    r'4dc23b69ac0b17be36816cca891848c946a42d5c';
+    r'0c92297c362ca553e3cff5d01f25858455fc0968';
 
 abstract class _$CategoryRepository extends $Notifier<void> {
   void build();
